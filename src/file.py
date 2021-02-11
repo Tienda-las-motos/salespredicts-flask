@@ -1,7 +1,5 @@
 # from IPython.core.display import display
 from fbclient import FirebaseApp
-from flask import Flask, jsonify, request
-from flask import Response
 
 import pandas as pd
 import json
@@ -171,10 +169,10 @@ def validate_file_struct(df, synonyms_cols):
             for key, value in synonyms_cols.items():
                 # Se intenta cambiar las columnas, si no es posible, se rechaza la petición
                 try:df = df.rename(columns={key:value})
-                except: return Response({
+                except: return {
                     'message': f'fallo al intentar cambiar columna {key} a {value}',
                     'status': 404
-                }, status=404)
+                }, 404
         
         # intenta revisar de nuevo las columnas
         try:df[cols_must_be]
@@ -186,17 +184,19 @@ def validate_file_struct(df, synonyms_cols):
                 # si hay error en las demás columnas revisamos en cuál y lo notificamos
                 for col in needed_cols:
                     try: df[col]
-                    except: return Response({
-                            'message': f'no se encontró la columna {col}',
-                            'status': 404
-                        }, status=404)
+                    except: 
+                        return {
+                                'message': f'no se encontró la columna {col}',
+                                'status': 404
+                            }, 404
             # si las columnas están bien, revisamos "CódigoInventario"
             else:
                 try: df['CódigoInventario']
-                except: return Response({
-                    'message': 'archivo tampoco contiene columna "CódigoInventario"',
-                    'status': 404
-                }, status=404)
+                except: 
+                    return {
+                        'message': 'archivo tampoco contiene columna "CódigoInventario"',
+                        'status': 404
+                    }, 404
                 # si la columna estaba fusionada, la separamos
                 else:
                     code_des = df['CódigoInventario'].str.split(' ', n=1, expand=True )

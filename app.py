@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request, Response
 from flask import render_template
 from flask_cors import CORS, cross_origin
 from src.file import Table
+from src.products import Product
+from src.predictions import SalesPredictions, Analyze
 
 
 
@@ -36,6 +38,38 @@ def index():
     def get_table(): return Table.get_table(request)
     
     
+    @app.route('/product/filter', methods=['GET'])
+    def product(): return Product.filter(request)
+
+
+    @app.route('/predictions/<string:query>', methods=['GET', 'POST'])
+    def predictions(query):
+        if query == 'sales-months':
+            return SalesPredictions.cant_query(request)
+        elif query == 'sales-cant':
+            return SalesPredictions.months_query(request)
+        elif query == 'sales-stats':
+            return SalesPredictions.stats_query(request)
+        elif query == 'sales-seasonal':
+            return SalesPredictions.seasonal(request)
+        else: 
+            return {
+                'message': 'Error en la ruta', 
+                'status': 404
+            }, 404
+    
+    
+    @app.route('/analyze/<string:criteria>', methods=['GET', 'POST'])
+    def analyze(criteria):
+        print(criteria)
+        if criteria == 'provider-offering':
+            return Analyze.providers_offers(request)
+        else: 
+            return {
+                'message': 'Error en la ruta', 
+                'status': 404
+            }, 404
+
 
     # To get data body in json, use request.json
     # To get data body in form, use request.form
