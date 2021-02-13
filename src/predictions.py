@@ -28,14 +28,16 @@ tz = pytz.timezone('America/Mexico_City')
 
 def ValidateRequest(query_params, request):
 
-    # print(request)
+    print(request)
     global message
     global params
     params = {}
     for param in query_params:
-        # print(param, request[param])
+        print(param, request[param])
         try: params[param] = request[param]
-        except: message = f'La petición debe incluir el parámetro "{param}"' 
+        except: 
+            message = f'La petición debe incluir el parámetro "{param}"' 
+            raise
     
     return params
     
@@ -116,7 +118,7 @@ class SalesPredictions():
 
         predict_months = reg.predict(months_required)
         predicted_cant = math.ceil(predict_months.sum())
-        print('Se venderán', predicted_cant, 'unidades en', months_query, 'meses')
+        print('Se venderán', predicted_cant, 'Unidades en', months_query, 'meses')
         
         # plt.plot(predict_year, 'ro', predict_months, 'bo')
         # plt.savefig(local_path+'months_prediction.jpg')
@@ -191,7 +193,7 @@ class SalesPredictions():
             if remaining_cant > 0: months_cant = months_cant + 1
             else: break
         
-        print(f"{query_cant} unidades se venderán en {months_cant} meses")
+        print(f"{query_cant} Unidades se venderán en {months_cant} meses")
         
         result = {
             "months_cant":int(months_cant),
@@ -209,7 +211,7 @@ class SalesPredictions():
     def stats_query( request ):
         # VALIDATE THERE IS TABLE ID
         
-        try: params = ValidateRequest(['table', 'product', 'test_size', 'window_size'], request.json)
+        try: query = ValidateRequest(['table', 'product', 'test_size', 'window_size'], request.json)
         except: 
             return {
                 'message': 'Falto un parámetro en la petición',
@@ -217,12 +219,10 @@ class SalesPredictions():
             }, 400
         
         
-        query = {
-            'table': params['table'],
-            'product': params['product'],
-            'test_size': params['test_size'],
-            'window_size': params['window_size'],
-        }
+        
+        query['test_size'] = int(query['test_size'])
+        query['window_size'] = int(query['window_size'])
+        
         
         
                 
@@ -253,19 +253,15 @@ class SalesPredictions():
             
         
         product_name = doc.to_dict()['name']
-        dataset = pd.read_json(doc_URL)
+        print(doc_URL)
+        dataset = pd.read_csv(doc_URL)
         dataset = dataset.fillna(method='ffill')
         print('dataset defined')
         
         
         predict_results = Predictions.by_stats(dataset, query['test_size'], query['window_size'], product_name)
         
-        est_pred_imgURL = upload_file('api/uploads/',cloud_path, 'estimated_predict.jpg' )
-        est_pred_jsonURL = upload_file('api/uploads/',cloud_path, 'estimated_predict.json' )
-        
-        predict_results['imgURL'] = est_pred_imgURL
-        predict_results['jsonURL'] = est_pred_jsonURL
-    
+           
         try: doc_ref.collection(u'predictions').document(u'estimated').set(predict_results)
         except: 
             return {
@@ -283,19 +279,16 @@ class SalesPredictions():
 
 
     def seasonal( request):
-        try: params = ValidateRequest(['table', 'product', 'test_size'], request.form)
+        try: query = ValidateRequest(['table', 'product', 'test_size'], request.args)
         except: 
             return {
                 'message': 'Falto un parámetro en la petición',
                 'status': 400
             }, 400
         
-        
-        query = {
-            'table': params['table'],
-            'product': params['product'],
-            'test_size': params['test_size'],
-            }
+
+        query['test_size'] = int(query['test_size'])
+
         
         
         
@@ -389,24 +382,18 @@ class Analyze():
     def providers_offers( request ):
         # VALIDATE THERE IS TABLE ID
         
-        try: params = ValidateRequest(['table', 'product', 'provider', 'buy_price', 'sale_price',  'condition', 'desc', 'stock'], request.args)
+        try: query = ValidateRequest(['table', 'product', 'provider', 'buy_price', 'sale_price',  'condition', 'desc', 'stock'], request.json)
         except: 
             return {
                 'message': 'Falto un parámetro en la petición',
                 'status': 400
             }, 400
         
-        
-        query = {
-            'table': params['table'],
-            'product': params['product'],
-            'provider': params['provider'],
-            'buy_price': int(params['buy_price']),
-            'sale_price': int(params['sale_price']),
-            'condition': int(params['condition']),
-            'desc': int(params['desc']) / 100,
-            'stock': int(params['stock']),
-        }
+        query['buy_price'] =  int(query['buy_price'])
+        query['sale_price'] =  int(query['sale_price'])
+        query['condition'] =  int(query['condition'])
+        query['desc'] =  int(query['desc']) / 100
+        query['stock'] =  int(query['stock'])
 
         print(query['buy_price'], query['desc'])
         print(type(query['buy_price']), type(query['desc']))
@@ -539,7 +526,7 @@ class Analyze():
         plt.plot( [month1,month1], [invests[0], invests[len(invests)-1]], 'g--', label='profits starts');
         plt.plot( [month2,month2], [invests[0], invests[len(invests)-1]], 'r--', label='profits ends');
         plt.legend();
-        posible_sales_URL = upload_img(cloud_path, f'{time_id}-posibles_sale.jpg', plt)
+        posible_sales_URL = upload_img(cloud_path, f'/{time_id}-posibles_sale.jpg', plt)
         
         
         doc_ref.collection('providers_offers').document(query['provider']).set({
@@ -594,7 +581,10 @@ class Predictions():
         return predict_year, reg, X, yearpredictionsURL
 
     def by_stats(dataset, test_size, window_size, product_name):
-        df_shift = dataset['unidades'].shift(1)
+        dataset['Fecha'] = pd.to_datetime(dataset['Fecha'])
+        dataset = dataset.set_index('Fecha')
+        
+        df_shift = dataset['Unidades'].shift(1)
         df_mean_roll = df_shift.rolling(window_size).mean()
         df_std_roll = df_shift.rolling(window_size).std()
         df_mean_roll.name = "mean_roll"
@@ -602,18 +592,18 @@ class Predictions():
         df_mean_roll.index = dataset.index
         df_std_roll.index = dataset.index
         
-        df_w = pd.concat([dataset['unidades'],df_mean_roll,df_std_roll],axis=1)
+        df_w = pd.concat([dataset['Unidades'],df_mean_roll,df_std_roll],axis=1)
 
         df_w = df_w[window_size:]
         
-        test_cant = int((dataset['unidades'].describe()['count'])*(test_size*.01))
+        test_cant = int((dataset['Unidades'].describe()['count'])*(test_size*.01))
 
         test = df_w[-test_cant:]
         train = df_w[:-test_cant]
-        X_test = test.drop("unidades",axis = 1)
-        y_test = test["unidades"]
-        X_train = train.drop("unidades",axis = 1)
-        y_train = train["unidades"]
+        X_test = test.drop("Unidades",axis = 1)
+        y_test = test["Unidades"]
+        X_train = train.drop("Unidades",axis = 1)
+        y_train = train["Unidades"]
 
 
 
@@ -625,14 +615,16 @@ class Predictions():
 
         total_predicted = np.sum(y_test_hat)
         mean_predicted = y_test_hat.describe()['mean']
+        print(y_test_hat)
         chart_data = {
             "train":y_train,
             "prediction":y_test_hat,
             "test":y_test,
         }
+        print(chart_data)
         predict_df = pd.DataFrame(data=chart_data)
-        predict_df.to_json('api/uploads/estimated_predict.json', orient="columns")
-
+        estimated_predict = predict_df.to_json( orient="columns")
+        estimated_predict_JSON = upload_file(cloud_path, '/estimated_predict.json', estimated_predict)
         
 
         plt.figure(figsize=(12,6));
@@ -641,7 +633,7 @@ class Predictions():
         plt.plot(y_test , label='Datos reales');
         plt.legend(loc='best')
         plt.title('Predicción de ventas ' + product_name)
-        estimated_predict_URL = upload_img(cloud_path, 'estimated_predict.jpg', plt)
+        estimated_predict_URL = upload_img(cloud_path, '/estimated_predict.jpg', plt)
 
         from sklearn.metrics import mean_squared_error
         mse = mean_squared_error(y_test, y_test_hat)
@@ -653,7 +645,8 @@ class Predictions():
             "months_predicted": len(hat_groups),
             "avg_for_sell": float("{:.2f}".format(mean_predicted)),
             "error_mean" : float("{:.2f}".format(mse)),
-            "estimated_predict_URL": estimated_predict_URL
+            "imgURL": estimated_predict_URL,
+            "jsonURL":estimated_predict_JSON
         }
         
         return result

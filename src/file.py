@@ -13,7 +13,9 @@ class Table():
     def upload(request):
             
         # LOAD FILE
-        print(request.files)
+        # print(request.files['dataset'])
+        
+        
         try:uploaded_file = request.files['dataset']
         except: 
             return {
@@ -29,17 +31,24 @@ class Table():
             synonyms_cols = request.data['synonyms']
         
         print(synonyms_cols)
-        filename = uploaded_file.name
-        filename = filename.replace(' ', '_')
-        current_directory = os.path.abspath(os.path.dirname(__file__))+'/'
+        filename = uploaded_file.filename
+        namews = filename.replace(' ', '_')
+        # current_directory = os.path.abspath(os.path.dirname(__file__))+'/'
         # local_path = 'api/uploads/'+filename
         print('Archivo ok')
         
         # READ FILE
         df = pd.read_csv(uploaded_file,  decimal=".", header=0, thousands=r",")
         df = validate_file_struct(df, synonyms_cols)
-            
-            
+        
+        
+        
+        # number_cols = ['Unidades', 'Unitario Venta', 'Ventas', 'Costo Unitario', 'Total Costo', 'Margen', 'PorMargen']
+        # for column in number_cols:
+        #     try:
+        #         df[column] = df[column].dropna().astype(int).replace(',', '', regex=True)
+        #     except ValueError:
+        #         pass
             
             
             
@@ -48,6 +57,7 @@ class Table():
         products_list = df[['Codigo', 'Descripcion']]
         products_list = products_list.drop_duplicates(subset=['Codigo']).dropna()
         products_list['Descripcion'] = products_list['Descripcion'].str.strip()
+        
 
         # GENERATE JSON RESULT but don't upload in firebase storeage
         loadfile_result = products_list.to_json(orient="table")
@@ -71,7 +81,7 @@ class Table():
         cloud_path = 'tables/'+doc_id+'/'
         df.fillna(value=0, inplace=True)
         df_file = df.to_csv()
-        fileURL = upload_file(cloud_path, filename, df_file)
+        fileURL = upload_file(cloud_path, namews, df_file)
         print('Archivo cargado a storage')
         
         
@@ -79,7 +89,8 @@ class Table():
             'total_count': int(count),
             'fileURL':fileURL,
             'file_name': filename,
-            'doc_id':doc_id
+            'doc_id':doc_id,
+            'storage_path': cloud_path + namews
         }
         
         print('Documento actualizado')
@@ -138,7 +149,7 @@ class Table():
 
         result = {
             'data': result_data,
-            'product_list': json.loads(loadfile_result)
+            'product_list': json.loads(loadfile_result), 
         }
 
         return {

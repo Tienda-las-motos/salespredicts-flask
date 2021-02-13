@@ -85,7 +85,7 @@ class Product():
         current_directory = os.path.abspath(os.path.dirname(__file__))+'/'
         local_path = 'api/uploads/'
         
-
+        
         # GET STATS
         product_stats = get_product_stats(product_selected)
         print('product_stats ok')

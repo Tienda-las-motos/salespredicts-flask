@@ -26,6 +26,10 @@ def index():
             "origins":"*"
         }
     })
+    
+    @app.route('/', methods=['GET', 'POST'])
+    def test():
+        return 'Sales predictions API works!'
 
     @app.route('/file', methods=['GET', 'POST'])
     def fileuploader():
@@ -75,7 +79,7 @@ def index():
     # To get data body in form, use request.form
     
     if __name__ == '__main__':
-        app.run(debug=True, port=4000)
+        app.run(debug=True, port=5000)
     return app
         
 app = index()
