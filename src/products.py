@@ -135,12 +135,12 @@ def get_product_stats(dataset):
     
     # CALCULATE PROMEDIATES
     # display(dataset['Unitario Venta'].describe())
-    avg_margin =      dataset['PorMargen'].describe()['mean']
-    avg_buy_price = dataset['Costo Unitario'].describe()['mean']
+    avg_margin =      dataset['Margen Porcentaje'].describe()['mean']
+    avg_buy_price = dataset['Unitario Costo'].describe()['mean']
     avg_sale_price =  dataset['Unitario Venta'].describe()['mean']
-    max_margin =      dataset['PorMargen'].describe()['max']
+    max_margin =      dataset['Margen Porcentaje'].describe()['max']
     max_sale_price =  dataset['Unitario Venta'].describe()['max']
-    min_buy_price = dataset['Costo Unitario'].describe()['min']
+    min_buy_price = dataset['Unitario Costo'].describe()['min']
     sales_quantity =  dataset['Unidades'].describe()['count']
 
     print('stats created')
@@ -166,23 +166,23 @@ def get_sell_stats(dataset):
         dataset['Unitario Venta'], 
         as_index=False).aggregate({ 
             'Unidades': 'sum', 
-            'PorMargen': 'mean' 
+            'Margen Porcentaje': 'mean' 
             })
     
     # Precio de venta con mayor rendimiento
-    max_venta_margen = precio_venta_list['PorMargen'].describe()['max']
-    max_venta_precio_row = precio_venta_list[precio_venta_list['PorMargen'] == max_venta_margen]
+    max_venta_margen = precio_venta_list['Margen Porcentaje'].describe()['max']
+    max_venta_precio_row = precio_venta_list[precio_venta_list['Margen Porcentaje'] == max_venta_margen]
     max_venta_precio_margen = max_venta_precio_row['Unitario Venta'].values[0]
     
     # Rendimiento promedio
-    avg_margen = precio_venta_list['PorMargen'].describe()['mean']
+    avg_margen = precio_venta_list['Margen Porcentaje'].describe()['mean']
     
     print('sell stats getted')
     
     
-    X = precio_venta_list[['PorMargen']]
+    X = precio_venta_list[['Margen Porcentaje']]
     Y = precio_venta_list['Unitario Venta']
-    X = precio_venta_list[['PorMargen']]
+    X = precio_venta_list[['Margen Porcentaje']]
     # saleY_test = precio_venta_list['Unitario Venta']
 
     sc_X = StandardScaler()
@@ -220,19 +220,19 @@ def get_sell_stats(dataset):
 
 def get_buy_stats(dataset):
     precio_compra_list = dataset.groupby(
-        dataset['Costo Unitario'], 
+        dataset['Unitario Costo'], 
         as_index=False).aggregate({
             'Unidades': 'sum',
-            'PorMargen': 'mean',
+            'Margen Porcentaje': 'mean',
             'Unitario Venta': 'mean'
             })
 
-    # avg_buy_price = precio_compra_list['Costo Unitario'].describe()['mean']
-    avg_buy_margen = precio_compra_list['PorMargen'].describe()['mean']
+    # avg_buy_price = precio_compra_list['Unitario Costo'].describe()['mean']
+    avg_buy_margen = precio_compra_list['Margen Porcentaje'].describe()['mean']
     print('buy stats getted')
 
-    X = precio_compra_list[['PorMargen']]
-    Y = precio_compra_list['Costo Unitario']
+    X = precio_compra_list[['Margen Porcentaje']]
+    Y = precio_compra_list['Unitario Costo']
 
     sc_X = StandardScaler()
 
@@ -268,7 +268,7 @@ def get_sales_timeline(dataset):
     sales_timeline = dataset.groupby(dataset['Fecha'], as_index=True).aggregate({
         'Unidades': 'sum', 
         'Ventas': 'sum',
-        'Total Costo': 'sum',
+        'Costos': 'sum',
     })
     
     first = sales_timeline.iloc[0].name
@@ -321,12 +321,12 @@ def get_salesvscosts(dataset):
     df_periods = dataset.groupby(pd.Grouper(freq='W')).aggregate({
         # 'Unidades': 'sum',
         'Ventas': 'sum',
-        'Total Costo': 'sum',
+        'Costos': 'sum',
         })
 
     plt.figure()
     df_periods.plot(figsize = (14,6),  title='Ventas vs Costos', )
-    # df_periods['Total Costo'].plot(figsize = (14,6), lw=2, label="Costos")
+    # df_periods['Costos'].plot(figsize = (14,6), lw=2, label="Costos")
     
     # df_dates.plot( figsize=(12, 5), title="Unidades vendidas por mes");
     salesvscosts_chart_URL = upload_img( product_path, 'salesvscosts.jpg', plt)
@@ -407,11 +407,11 @@ def get_timestats(dataset):
     meses_list = ps_dates.groupby(pd.Grouper(freq="M")).aggregate({
         'Unidades': 'sum',
         'Unitario Venta': 'mean',
-        'Costo Unitario': 'mean',
+        'Unitario Costo': 'mean',
         'Ventas': 'sum',
-        'Total Costo': 'sum',
-        'Margen': 'sum',
-        'PorMargen': 'mean',
+        'Costos': 'sum',
+        'Margen Monto': 'sum',
+        'Margen Porcentaje': 'mean',
     }).dropna()
     print('months list grouped')
     
@@ -426,8 +426,8 @@ def get_timestats(dataset):
 
 
     # GET MAX THROWPUT MONTH
-    max_throwput_month = meses_list['PorMargen'].describe()['max']
-    max_margen_month = meses_list[meses_list['PorMargen'] == max_throwput_month]
+    max_throwput_month = meses_list['Margen Porcentaje'].describe()['max']
+    max_margen_month = meses_list[meses_list['Margen Porcentaje'] == max_throwput_month]
     margen_months = []
     for month, row in max_margen_month.iterrows():
         str_month = month.strftime('%B')

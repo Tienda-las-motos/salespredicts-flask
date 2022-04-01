@@ -46,7 +46,7 @@ class Table():
       # print(df.head())
       
       
-      # number_cols = ['Unidades', 'Unitario Venta', 'Ventas', 'Costo Unitario', 'Total Costo', 'Margen', 'PorMargen']
+      # number_cols = ['Unidades', 'Unitario Venta', 'Ventas', 'Unitario Costo', 'Costos', 'Margen Monto', 'Margen Porcentaje']
       # for column in number_cols:
       #     try:
       #         df[column] = df[column].dropna().astype(int).replace(',', '', regex=True)
@@ -177,8 +177,8 @@ def validate_file_struct(df, synonyms_cols):
     global cols_must_be 
     global needed_cols
     
-    cols_must_be = ['Fecha', 'Unidades', 'Unitario Venta', 'Ventas', 'Costo Unitario', 'Total Costo', 'Margen', 'PorMargen', 'Codigo', 'Descripcion']
-    needed_cols = ['Fecha', 'Unidades', 'Unitario Venta', 'Ventas', 'Costo Unitario', 'Total Costo', 'Margen', 'PorMargen']
+    cols_must_be = ['Fecha', 'Unidades', 'Unitario Venta', 'Ventas', 'Unitario Costo', 'Costos', 'Margen Monto', 'Margen Porcentaje', 'Codigo', 'Descripcion']
+    needed_cols = ['Fecha', 'Unidades', 'Unitario Venta', 'Ventas', 'Unitario Costo', 'Costos', 'Margen Monto', 'Margen Porcentaje']
     
     # revisar si las columnas vienen bien
     try: df[cols_must_be]
