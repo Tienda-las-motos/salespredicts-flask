@@ -10,109 +10,117 @@ db = FirebaseApp.fs
 st = FirebaseApp.st
 
 class Table():
-    def upload(request):
+  def upload(request):
             
-        # LOAD FILE
-        # print(request.files['dataset'])
+    # LOAD FILE
+    # print(request.files['dataset'])
+    
+    
+    try:uploaded_file = request.files['dataset']
+    except: 
+      return {
+          'message':'La petición no contiene archivo'
+      }, 400
+    
+    global synonyms_cols
+    try:request.args['synonyms']
+    except:
+      print('no sinónimos')
+      synonyms_cols = {}
+    else:
+      synonyms_cols = request.data['synonyms']
+      
+      
+    try: 
+      print(synonyms_cols)
+      filename = uploaded_file.filename
+      namews = filename.replace(' ', '_')
+      # current_directory = os.path.abspath(os.path.dirname(__file__))+'/'
+      # local_path = 'api/uploads/'+filename
+      print('Archivo ok')
+      
+      # READ FILE
+      df = pd.read_csv(uploaded_file,  decimal=".", header=0, thousands=r",")
+      # df = validate_file_struct(df, synonyms_cols)
+      
+      # print(df.head())
+      
+      
+      # number_cols = ['Unidades', 'Unitario Venta', 'Ventas', 'Costo Unitario', 'Total Costo', 'Margen', 'PorMargen']
+      # for column in number_cols:
+      #     try:
+      #         df[column] = df[column].dropna().astype(int).replace(',', '', regex=True)
+      #     except ValueError:
+      #         pass
+          
+      
         
-        
-        try:uploaded_file = request.files['dataset']
-        except: 
-            return {
-                'message':'La petición no contiene archivo'
-            }, 400
-        
-        global synonyms_cols
-        try:request.args['synonyms']
-        except:
-            print('no sinónimos')
-            synonyms_cols = {}
-        else:
-            synonyms_cols = request.data['synonyms']
-        
-        print(synonyms_cols)
-        filename = uploaded_file.filename
-        namews = filename.replace(' ', '_')
-        # current_directory = os.path.abspath(os.path.dirname(__file__))+'/'
-        # local_path = 'api/uploads/'+filename
-        print('Archivo ok')
-        
-        # READ FILE
-        df = pd.read_csv(uploaded_file,  decimal=".", header=0, thousands=r",")
-        df = validate_file_struct(df, synonyms_cols)
-        
-        
-        
-        # number_cols = ['Unidades', 'Unitario Venta', 'Ventas', 'Costo Unitario', 'Total Costo', 'Margen', 'PorMargen']
-        # for column in number_cols:
-        #     try:
-        #         df[column] = df[column].dropna().astype(int).replace(',', '', regex=True)
-        #     except ValueError:
-        #         pass
-            
-            
-            
-            
-        # FILTER THE LIST
-        products_list = df[['Codigo', 'Descripcion']]
-        products_list = products_list.drop_duplicates(subset=['Codigo']).dropna()
-        products_list['Descripcion'] = products_list['Descripcion'].str.strip()
-        
+      # FILTER THE LIST
+      products_list = df[['Codigo', 'Descripcion']]
+      products_list = products_list.drop_duplicates(subset=['Codigo']).dropna()
+      products_list['Descripcion'] = products_list['Descripcion'].str.strip()
+      
 
-        # GENERATE JSON RESULT but don't upload in firebase storeage
-        loadfile_result = products_list.to_json(orient="table")
-        count = products_list.describe()['Codigo']['count']
-        
-        print('Lista creada')
+      # GENERATE JSON RESULT but don't upload in firebase storeage
+      loadfile_result = products_list.to_json(orient="table")
+      count = products_list.describe()['Codigo']['count']
+      
+      print('Lista creada')
 
-        
-        #STORAGE IN FIREBASE
-        # Agregamos los datos válidos para obtener un id de firestore
-        tables_ref = db.collection(u'tables')
-        doc = tables_ref.add({
-            'total_count': int(count),
-            'file_name': filename,
-        })
-        doc_id = doc[1].id
-        print('Id obtenido')
-        
-        
-        # UPLOAD FILE CSV TO STORAGE
-        cloud_path = 'tables/'+doc_id+'/'
-        df.fillna(value=0, inplace=True)
-        df_file = df.to_csv()
-        fileURL = upload_file(cloud_path, namews, df_file)
-        print('Archivo cargado a storage')
-        
-        
-        result_data = {
-            'total_count': int(count),
-            'fileURL':fileURL,
-            'file_name': filename,
-            'doc_id':doc_id,
-            'storage_path': cloud_path + namews
-        }
-        
-        print('Documento actualizado')
-        tables_ref.document(doc_id).update(result_data)
-        
-        result = {
-            'data': result_data,
-            'product_list': json.loads(loadfile_result)
-        }
-        
-        
-        
-        
-        return {
-            'status': 201,
-            'message': 'ok', 
-            'result': result
-            }, 201
+      
+      #STORAGE IN FIREBASE
+      # Agregamos los datos válidos para obtener un id de firestore
+      tables_ref = db.collection(u'tables')
+      doc = tables_ref.add({
+        'total_count': int(count),
+        'file_name': filename,
+      })
+      doc_id = doc[1].id
+      print('Id obtenido')
+      
+      
+      # UPLOAD FILE CSV TO STORAGE
+      cloud_path = 'tables/'+doc_id+'/'
+      df.fillna(value=0, inplace=True)
+      df_file = df.to_csv()
+      fileURL = upload_file(cloud_path, namews, df_file)
+      print('Archivo cargado a storage')
+      
+      
+      result_data = {
+        'total_count': int(count),
+        'fileURL':fileURL,
+        'file_name': filename,
+        'doc_id':doc_id,
+        'storage_path': cloud_path + namews
+      }
+      
+      print('Documento actualizado')
+      tables_ref.document(doc_id).update(result_data)
+      
+      result = {
+        'data': result_data,
+        'product_list': json.loads(loadfile_result)
+      }
+      
+      
+      
+      
+      return {
+        'status': 201,
+        'message': 'ok', 
+        'result': result
+        }, 201
+      
+    except:
+      return {
+        'status': 400,
+        'message': 'Error al leer el archivo',
+        }, 400
 
 
 
-    def get_table(request):
+  def get_table(request):
         # VALIDATE THERE IS TABLE ID
         try:
             table_id = request.args['id']

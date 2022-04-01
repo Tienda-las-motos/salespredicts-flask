@@ -13,6 +13,9 @@ import os
 import io
 
 def index():
+    
+    
+    
     """Responds to any HTTP request.
     Args:
         request (flask.Request): HTTP request object.

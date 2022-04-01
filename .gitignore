@@ -1,3 +1,5 @@
 .vscode
 sales-predict-firebase.json
 __pycache__
+
+/.env
