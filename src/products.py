@@ -59,7 +59,7 @@ class Product():
         
         # READ DOCUMENT
         df = pd.read_csv(doc_URL,  decimal=".", thousands=",")  
-        df['Fecha'] = pd.to_datetime(df['Fecha'], format='%d/%m/%Y', errors='coerce')
+        df = formatValues(df)
         
         # VALIDATE IS PRODUCT IN LIST
         try:product_selected = df.loc[df['Codigo'] == product_id]
@@ -133,14 +133,18 @@ class Product():
         
 def get_product_stats(dataset):
     
+    print(dataset.head())
+    print(dataset['Unitario Costo'].head())
+    print(dataset['Unitario Costo'].describe(include='all'))
+    # print(dataset['Unitario Costo'][0])
     # CALCULATE PROMEDIATES
     # display(dataset['Unitario Venta'].describe())
     avg_margin =      dataset['Margen Porcentaje'].describe()['mean']
-    avg_buy_price = dataset['Unitario Costo'].describe()['mean']
+    avg_buy_price =   dataset['Unitario Costo'].describe()['mean']
     avg_sale_price =  dataset['Unitario Venta'].describe()['mean']
     max_margin =      dataset['Margen Porcentaje'].describe()['max']
     max_sale_price =  dataset['Unitario Venta'].describe()['max']
-    min_buy_price = dataset['Unitario Costo'].describe()['min']
+    min_buy_price =   dataset['Unitario Costo'].describe()['min']
     sales_quantity =  dataset['Unidades'].describe()['count']
 
     print('stats created')
@@ -444,3 +448,22 @@ def get_timestats(dataset):
         "meses_list_df": meseslistURL
     }
     
+def formatValues(dataset):
+    if 'Fecha' in dataset.columns:
+        dataset['Fecha'] = pd.to_datetime(dataset['Fecha'], format='%d/%m/%Y', errors='coerce')
+    if 'Unidades' in dataset.columns:
+        dataset['Unidades'] = pd.to_numeric(dataset['Unidades'], errors='coerce')
+    if 'Unitario Venta' in dataset.columns:
+        dataset['Unitario Venta'] = pd.to_numeric(dataset['Unitario Venta'], errors='coerce')
+    if 'Ventas' in dataset.columns:
+        dataset['Ventas'] = pd.to_numeric(dataset['Ventas'], errors='coerce')
+    if 'Unitario Costo' in dataset.columns:
+        dataset['Unitario Costo'] = pd.to_numeric(dataset['Unitario Costo'], errors='coerce')
+    if 'Costos' in dataset.columns:
+        dataset['Costos'] = pd.to_numeric(dataset['Costos'], errors='coerce')
+    if 'Margen Monto' in dataset.columns:
+        dataset['Margen Monto'] = pd.to_numeric(dataset['Margen Monto'], errors='coerce')
+    if 'Margen Porcentje' in dataset.columns:
+        dataset['Margen Porcentje'] = pd.to_numeric(dataset['Margen Porcentje'], errors='coerce')
+    
+    return dataset

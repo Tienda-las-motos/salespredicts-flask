@@ -1,5 +1,6 @@
 from fbclient import FirebaseApp
 from src.file import upload_file, upload_img
+from src.products import formatValues
 
 from sklearn.svm import SVR
 from pmdarima.arima import auto_arima
@@ -184,19 +185,20 @@ class SalesPredictions():
         
         
         
-        remaining_cant = int(query_cant)
+        remaining_cant = float(query_cant)
         months_required = score[0:12]
         predict_months = reg.predict(months_required)
+        print(predict_months)
         months_cant = 0
         for cant in predict_months:
             remaining_cant -= cant
             if remaining_cant > 0: months_cant = months_cant + 1
             else: break
         
-        print(f"{query_cant} Unidades se venderán en {months_cant} meses")
+        print(f"{query_cant} Unidades se venderán en {months_cant + 1} meses")
         
         result = {
-            "months_cant":int(months_cant),
+            "months_cant":float(months_cant) + 1,
         }
         
         
@@ -258,8 +260,13 @@ class SalesPredictions():
         dataset = dataset.fillna(method='ffill')
         print('dataset defined')
         
-        
-        predict_results = Predictions.by_stats(dataset, query['test_size'], query['window_size'], product_name)
+        try:
+            predict_results = Predictions.by_stats(dataset, query['test_size'], query['window_size'], product_name)
+        except Exception as message:
+            return {
+                'message': message.__str__(),
+                'status': 400
+            }, 400
         
            
         try: doc_ref.collection(u'predictions').document(u'estimated').set(predict_results)
@@ -317,6 +324,7 @@ class SalesPredictions():
         print('firebase ok')
         
         dataset = pd.read_csv(doc_URL, header=None, index_col=0, parse_dates=True, squeeze=True)
+        # dataset = formatValues(dataset)
 
         # split_point = math.floor( len(month_sales) *.80)
         # dataset, validation = month_sales[0:split_point], month_sales[split_point:]
@@ -336,8 +344,8 @@ class SalesPredictions():
         except: 
             return {
             'message':'No hay suficientes datos para realizar esta predicción',
-            'status':204
-        }, 204
+            'status':400
+        }, 400
         
         
         predict = Arima_model.predict(n_periods=query['test_size'])
@@ -547,6 +555,8 @@ class Analyze():
 class Predictions():
     def by_year_sales(dataset):
         
+        # dataset = formatValues(dataset)
+        
         X = dataset[['Unitario Venta']]
         Y = dataset['Unidades']
 
@@ -572,7 +582,7 @@ class Predictions():
         df_file = year_df.to_csv(encoding='utf-8', index=False )
         
         # json.dump(p, codecs.open(local_path+'year_predictions.json', 'w'))
-        print(cloud_path)
+        # print(cloud_path)
         # print(df_file)
         yearpredictionsURL = upload_file(cloud_path+'/', 'year_predictions.csv', df_file)
         print(yearpredictionsURL)
@@ -581,6 +591,7 @@ class Predictions():
         return predict_year, reg, X, yearpredictionsURL
 
     def by_stats(dataset, test_size, window_size, product_name):
+        # dataset = formatValues(dataset)
         dataset['Fecha'] = pd.to_datetime(dataset['Fecha'])
         dataset = dataset.set_index('Fecha')
         
@@ -605,13 +616,15 @@ class Predictions():
         X_train = train.drop("Unidades",axis = 1)
         y_train = train["Unidades"]
 
+        try:
+            clf = SVR(gamma="scale")
+            clf.fit(X_train, y_train)
+            y_train_hat = pd.Series(clf.predict(X_train),index=y_train.index)
+            y_test_hat = pd.Series(clf.predict(X_test),index=y_test.index)
+            hat_groups = y_test_hat.groupby(pd.Grouper(freq='M'))
+        except: 
+            raise Exception('No hay diferencia en los datos para realizar predicciones')
 
-
-        clf = SVR(gamma="scale")
-        clf.fit(X_train, y_train)
-        y_train_hat = pd.Series(clf.predict(X_train),index=y_train.index)
-        y_test_hat = pd.Series(clf.predict(X_test),index=y_test.index)
-        hat_groups = y_test_hat.groupby(pd.Grouper(freq='M'))
 
         total_predicted = np.sum(y_test_hat)
         mean_predicted = y_test_hat.describe()['mean']

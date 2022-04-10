@@ -1,0 +1,53 @@
+{
+  "message": "ok", 
+  "result": {
+    "buy_stats": {
+      "avg_buy_price": 15126.05042, 
+      "max_buy_price": 15126.05042, 
+      "suggest_buy_price": 10187, 
+      "suggest_buy_price_URL": "https://storage.googleapis.com/sales-predict.appspot.com/tables/B8s1musWVLcWbJdqSB7f/products/10041808/suggest_buy_price.jpg"
+    }, 
+    "code": "10041808", 
+    "dataset": "https://storage.googleapis.com/sales-predict.appspot.com/tables/B8s1musWVLcWbJdqSB7f/products/10041808/product_dataset.csv", 
+    "name": "LEVA CLUTCH", 
+    "product_stats": {
+      "avg_buy_price": 10187, 
+      "avg_margin": 48, 
+      "avg_sale_price": 15126, 
+      "max_margin": 65, 
+      "max_sale_price": 16806, 
+      "min_buy_price": 10187, 
+      "sales_quantity": 6, 
+      "sold_units": 6
+    }, 
+    "sell_stats": {
+      "avg_sale_price": 15126.050420000001, 
+      "avg_throwput_sale": 0, 
+      "max_sale_price": 16806.722690000002, 
+      "max_throwput_sale_price": 16806, 
+      "suggest_sale_price": 16005, 
+      "suggest_sale_price_img": "https://storage.googleapis.com/sales-predict.appspot.com/tables/B8s1musWVLcWbJdqSB7f/products/10041808/suggest_sale_price.jpg"
+    }, 
+    "time_stats": {
+      "avgsales_per_month": 1.5, 
+      "files": {
+        "boxchart_URL": "https://storage.googleapis.com/sales-predict.appspot.com/tables/B8s1musWVLcWbJdqSB7f/products/10041808/boxes-chart.jpg", 
+        "meses_list_df": "https://storage.googleapis.com/sales-predict.appspot.com/tables/B8s1musWVLcWbJdqSB7f/products/10041808/month-sales.csv", 
+        "salesvscosts_chart_URL": "https://storage.googleapis.com/sales-predict.appspot.com/tables/B8s1musWVLcWbJdqSB7f/products/10041808/salesvscosts.jpg", 
+        "timeline": "https://storage.googleapis.com/sales-predict.appspot.com/tables/B8s1musWVLcWbJdqSB7f/products/10041808/sales-timeline.csv", 
+        "unitsbymonths_df_URL": "https://storage.googleapis.com/sales-predict.appspot.com/tables/B8s1musWVLcWbJdqSB7f/products/10041808/unitsbymonths.csv"
+      }, 
+      "first_sale": "Fri, 17 Dec 2021 00:00:00 GMT", 
+      "last_sale": "Wed, 23 Mar 2022 00:00:00 GMT", 
+      "max_monthsales": 2, 
+      "max_sales_month": [
+        "January", 
+        "March"
+      ], 
+      "max_throwput_month": [
+        "February"
+      ]
+    }
+  }, 
+  "status": 200
+}

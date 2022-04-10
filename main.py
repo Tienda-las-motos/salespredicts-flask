@@ -6,12 +6,6 @@ from src.products import Product
 from src.predictions import SalesPredictions, Analyze
 
 
-
-import pandas as pd
-import json
-import os
-import io
-
 def index():
     
     
@@ -32,7 +26,7 @@ def index():
     
     @app.route('/', methods=['GET', 'POST'])
     def test():
-        return 'Sales predictions API works!'
+        return 'Sales predictions API works on Version 1.2!'
 
     @app.route('/file', methods=['GET', 'POST'])
     def fileuploader():
@@ -82,7 +76,7 @@ def index():
     # To get data body in form, use request.form
     
     if __name__ == '__main__':
-        app.run(debug=True, port=5000)
+        app.run(debug=False, port=5000)
     return app
         
 app = index()

@@ -1,0 +1,11 @@
+{
+  "body": {
+    "content": "",
+    "file": false,
+    "fileSize": false
+  },
+  "headers": {},
+  "method": "GET",
+  "title": "Filtrado de producto",
+  "url": "http://127.0.0.1:5000/product/filter?table=B8s1musWVLcWbJdqSB7f&product=10041808"
+}
