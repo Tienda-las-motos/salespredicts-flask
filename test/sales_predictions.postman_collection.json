@@ -1,0 +1,373 @@
+{
+	"info": {
+		"_postman_id": "4c4970f5-0ee6-4b89-9f5b-8b96f9f6c8ea",
+		"name": "sales_predictions",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "6291264"
+	},
+	"item": [
+		{
+			"name": "workspace",
+			"item": [
+				{
+					"name": "workspace.load_file",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "dataset",
+									"type": "file",
+									"src": "/C:/Users/jgu7m/Devs/predictions/Notebook/Informes de ventas.csv"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{PORT}}/file",
+							"host": [
+								"{{PORT}}"
+							],
+							"path": [
+								"file"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "workspace.load_file.manual",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "dataset",
+									"type": "file",
+									"src": "/C:/Users/DELL/Pictures/530dc3917b02b31acbca928a4f7e968f.png"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{PORT}}/api/load-file/",
+							"host": [
+								"{{PORT}}"
+							],
+							"path": [
+								"api",
+								"load-file",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "workspace.load_table",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{PORT}}/table?id={{TABLE}}",
+							"host": [
+								"{{PORT}}"
+							],
+							"path": [
+								"table"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "{{TABLE}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "products",
+			"item": [
+				{
+					"name": "product.filter",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{PORT}}/product/filter?table={{TABLE}}&product={{PRODUCT}}",
+							"host": [
+								"{{PORT}}"
+							],
+							"path": [
+								"product",
+								"filter"
+							],
+							"query": [
+								{
+									"key": "table",
+									"value": "{{TABLE}}"
+								},
+								{
+									"key": "product",
+									"value": "{{PRODUCT}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "product.month_details",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{PORT}}/api/product/month-details?table=GscRwIx3AbcdcnevaZmz&product=10012919",
+							"host": [
+								"{{PORT}}"
+							],
+							"path": [
+								"api",
+								"product",
+								"month-details"
+							],
+							"query": [
+								{
+									"key": "table",
+									"value": "GscRwIx3AbcdcnevaZmz"
+								},
+								{
+									"key": "product",
+									"value": "10012919"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "predictions",
+			"item": [
+				{
+					"name": "predictions.estimated",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"table\":\"{{TABLE}}\",\r\n    \"product\":\"{{PRODUCT}}\",\r\n    \"test_size\":25,\r\n    \"window_size\":3\r\n}"
+						},
+						"url": {
+							"raw": "{{PORT}}/predictions/sales-stats",
+							"host": [
+								"{{PORT}}"
+							],
+							"path": [
+								"predictions",
+								"sales-stats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "predictions.ARIMA",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {
+							"content-type": true
+						}
+					},
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"table\":\"GscRwIx3AbcdcnevaZmz\",\r\n    \"product\":\"10012919\",\r\n    \"test_size\":25\r\n}"
+						},
+						"url": {
+							"raw": "{{PORT}}/api/predictions/arima",
+							"host": [
+								"{{PORT}}"
+							],
+							"path": [
+								"api",
+								"predictions",
+								"arima"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Analyze offer",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{PORT}}/analyze/provider-offering?table={{TABLE}}&product={{PRODUCT}}&stock=10&condition=50&desc=20&provider=Jorge&buy_price=8516&sale_price=10172",
+							"host": [
+								"{{PORT}}"
+							],
+							"path": [
+								"analyze",
+								"provider-offering"
+							],
+							"query": [
+								{
+									"key": "table",
+									"value": "{{TABLE}}"
+								},
+								{
+									"key": "product",
+									"value": "{{PRODUCT}}"
+								},
+								{
+									"key": "stock",
+									"value": "10"
+								},
+								{
+									"key": "condition",
+									"value": "50"
+								},
+								{
+									"key": "desc",
+									"value": "20"
+								},
+								{
+									"key": "provider",
+									"value": "Jorge"
+								},
+								{
+									"key": "buy_price",
+									"value": "8516"
+								},
+								{
+									"key": "sale_price",
+									"value": "10172"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Predict by months",
+					"protocolProfileBehavior": {
+						"disabledSystemHeaders": {}
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{PORT}}/predictions/sales-cant?table={{TABLE}}&product={{PRODUCT}}&months=2",
+							"host": [
+								"{{PORT}}"
+							],
+							"path": [
+								"predictions",
+								"sales-cant"
+							],
+							"query": [
+								{
+									"key": "table",
+									"value": "{{TABLE}}"
+								},
+								{
+									"key": "product",
+									"value": "{{PRODUCT}}"
+								},
+								{
+									"key": "months",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Predict by cant",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{PORT}}/predictions/sales-months?table={{TABLE}}&product={{PRODUCT}}&cant=30",
+							"host": [
+								"{{PORT}}"
+							],
+							"path": [
+								"predictions",
+								"sales-months"
+							],
+							"query": [
+								{
+									"key": "table",
+									"value": "{{TABLE}}"
+								},
+								{
+									"key": "product",
+									"value": "{{PRODUCT}}"
+								},
+								{
+									"key": "cant",
+									"value": "30"
+								},
+								{
+									"key": "",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
