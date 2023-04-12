@@ -1,18 +1,19 @@
 # from IPython.core.display import display
+import json
+import locale
+import os
+import warnings
+
+import matplotlib as mlp
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
+
 from fbclient import FirebaseApp
 from src.file import upload_file, upload_img
 
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LinearRegression
-
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib as mlp
-import numpy as np
-import locale
-import warnings
-import json
-import os
 # warnings.filterwarnings("ignore")
 
 
@@ -25,6 +26,7 @@ class Product():
     def filter(request):
 
         # VALIDATE THERE IS TABLE ID
+        print(request.args['table'])
         global table_id
         try:
             table_id = request.args['table']
