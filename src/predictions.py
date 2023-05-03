@@ -45,6 +45,7 @@ def ValidateRequest(query_params, request):
 
 
 class SalesPredictions():
+    """ Estimación de meses (En cuántos meses se venderá X cantidad) """
     def months_query(request):
 
         # VALIDATE PARAMS
@@ -97,7 +98,6 @@ class SalesPredictions():
 
         local_path = os.path.abspath(os.path.dirname(__file__))+'/'
         print('Archivo cargado')
-        # display(dataset.head())
 
         # TRAIN AND PREDICT
         year_dataset, reg, score, predictionsURL = Predictions.by_year_sales(
@@ -114,6 +114,7 @@ class SalesPredictions():
         print('Se venderán', predicted_cant,
               'Unidades en', months_query, 'meses')
 
+        # Obtine el gráfico de la predicción
         # plt.plot(predict_year, 'ro', predict_months, 'bo')
         # plt.savefig(local_path+'months_prediction.jpg')
         # monthpredictionURL = upload_file(local_path, cloud_path, 'months_prediction.jpg')
@@ -131,6 +132,7 @@ class SalesPredictions():
             "message": "ok",
         }, 200
 
+    """ Estimación de ventas dentro de un año"""
     def cant_query(request):
         # locale.setlocale(locale.LC_TIME, 'es_MX.UTF-8')
 
@@ -168,7 +170,6 @@ class SalesPredictions():
         local_path = os.path.abspath(os.path.dirname(__file__))+'/'
 
         print('Archivo cargado')
-        # display(dataset.head())
 
         # TRAIN AND PREDICT
         year_dataset, reg, score, predictionsURL = Predictions.by_year_sales(
@@ -200,6 +201,7 @@ class SalesPredictions():
             "message": "ok",
         }, 200
 
+    """ Predicción por estadísticas. Tendencias """
     def stats_query(request):
         # VALIDATE THERE IS TABLE ID
 
@@ -239,12 +241,15 @@ class SalesPredictions():
             }, 404
         print('timeline dataset getted')
 
+        # Lee el archivo
         product_name = doc.to_dict()['name']
         print(doc_URL)
         dataset = pd.read_csv(doc_URL)
         dataset = dataset.fillna(method='ffill')
         print('dataset defined')
 
+        # Realiza predicción mediante estadísticas
+        #TODO - Buscar el equivalente en typescript para hacer predicción SVR
         try:
             predict_results = Predictions.by_stats(
                 dataset, query['test_size'], query['window_size'], product_name)
@@ -271,6 +276,7 @@ class SalesPredictions():
             "message": "ok",
         }, 200
 
+    """ Predicción ARIMA """
     def seasonal(request):
         try:
             query = ValidateRequest(
@@ -367,8 +373,8 @@ class SalesPredictions():
             'message': 'ok',
         }, 200
 
-
 class Analyze():
+    """ Analiza ofertas de los proveedores """
     def providers_offers(request):
         # VALIDATE THERE IS TABLE ID
 
@@ -528,6 +534,7 @@ class Analyze():
         }, 200
 
 
+""" Predicciones por tendencia """
 class Predictions():
     def by_year_sales(dataset):
 

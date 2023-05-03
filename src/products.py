@@ -25,7 +25,7 @@ mlp.style.use('seaborn')
 class Product():
     def filter(request):
 
-        # VALIDATE THERE IS TABLE ID
+        # Validate there is table id param 
         print(request.args['table'])
         global table_id
         try:
@@ -37,7 +37,7 @@ class Product():
                 'status': 400
             }, 400
 
-        # VALIDATE IS PRODUCT ID
+        # Validate is product id param
         try:
             product_id = request.args['product']
         except:
@@ -46,7 +46,7 @@ class Product():
                 'status': 400
             }, 400
 
-        # VALIDATE IS DOCUMENT IN FIRESTORE
+        # Validate if is the document in firestore
         try:
             doc = doc_ref.get()
             doc_URL = doc.to_dict()['fileURL']
@@ -56,12 +56,12 @@ class Product():
                 'status': 404
             }, 404
 
-        # READ DOCUMENT
+        # read the document
         df = pd.read_csv(doc_URL,  decimal=".", thousands=",")
         print(df.head())
         df = formatValues(df)
 
-        # VALIDATE IS PRODUCT IN LIST
+        # Validate if is the product in list
         try:
             product_selected = df.loc[df['Codigo'] == product_id]
         except:
@@ -75,7 +75,7 @@ class Product():
         print('petición realizada con éxito')
         print(product_selected.head())
 
-        # DEFINE PATHS
+        # Define paths
         global product_name
         global product_path
         global local_path
@@ -86,7 +86,7 @@ class Product():
         current_directory = os.path.abspath(os.path.dirname(__file__))+'/'
         local_path = 'api/uploads/'
 
-        # GET STATS
+        # Get stats
         product_stats = get_product_stats(product_selected)
         print('product_stats ok')
         sell_stats = get_sell_stats(product_selected)
@@ -96,11 +96,10 @@ class Product():
         buy_stats = get_buy_stats(product_selected)
         print('buy_stats ok')
 
-        # STORAGE FILES
+        # Storage files
         ps_file = product_selected.to_csv()
         datasetURL = upload_file(product_path, 'product_dataset.csv', ps_file)
         print('dataset uploaded')
-
         product_ref = doc_ref.collection('products').document(product_id)
         product_ref.set({
             "name": product_name,
@@ -133,9 +132,8 @@ def get_product_stats(dataset):
     print(dataset.head())
     print(dataset['Unitario Costo'].head())
     print(dataset['Unitario Costo'].describe(include='all'))
-    # print(dataset['Unitario Costo'][0])
-    # CALCULATE PROMEDIATES
-    # display(dataset['Unitario Venta'].describe())
+    
+    # Calculate promediates
     avg_margin = dataset['Margen Porcentaje'].describe()['mean']
     avg_buy_price = dataset['Unitario Costo'].describe()['mean']
     avg_sale_price = dataset['Unitario Venta'].describe()['mean']
@@ -143,7 +141,6 @@ def get_product_stats(dataset):
     max_sale_price = dataset['Unitario Venta'].describe()['max']
     min_buy_price = dataset['Unitario Costo'].describe()['min']
     sales_quantity = dataset['Unidades'].describe()['count']
-
     print('stats created')
 
     sold_units = dataset['Unidades'].sum()
@@ -163,6 +160,7 @@ def get_product_stats(dataset):
 
 
 def get_sell_stats(dataset):
+    # Filtra las columnas necesarias
     precio_venta_list = dataset.groupby(
         dataset['Unitario Venta'],
         as_index=False).aggregate({
@@ -181,45 +179,49 @@ def get_sell_stats(dataset):
 
     print('sell stats getted')
 
+    #SECTION - Obtener precio sugerido de venta mediante regresión lineal
+
     X = precio_venta_list[['Margen Porcentaje']]
     Y = precio_venta_list['Unitario Venta']
     X = precio_venta_list[['Margen Porcentaje']]
     # saleY_test = precio_venta_list['Unitario Venta']
 
+    #TODO - Search what do this
     sc_X = StandardScaler()
-
     X = sc_X.fit_transform(X.values)
     X = sc_X.transform(X)
 
-    # Entrenación
+    # Entrenamiento de datos
     reg = LinearRegression().fit(X, Y)
     score_error2 = reg.score(X, Y)
     print('sell stats trained')
 
+    # Predicción   
     predict = reg.predict(X)
     suggest_sale_price = reg.predict([[avg_margen]])
     print('sell predictions ok')
 
+    # Obtiene imagen del gráfico
     plt.figure()
-    # print('figure created')
     plt.plot(predict, 'ro', suggest_sale_price, 'bo')
-    # print('ploted')
     suggessalepriceURL = upload_img(
         product_path, 'suggest_sale_price.jpg', plt)
-    # print('sells chart created')
+
+    # !SECTION
 
     return {
-        'max_throwput_sale_price': int(max_venta_precio_margen),
-        'avg_throwput_sale': int(avg_margen),
-        # 'score_error2': int(score_error2),
-        'suggest_sale_price': int(suggest_sale_price),
-        "suggest_sale_price_img": suggessalepriceURL,
-        "avg_sale_price": precio_venta_list.describe()['Unitario Venta']['mean'],
-        "max_sale_price": precio_venta_list.describe()['Unitario Venta']['max']
+        'max_throwput_sale_price': int(max_venta_precio_margen), # precio de venta de  mayor rendimiento
+        'avg_throwput_sale': int(avg_margen), # venta de rendimiento promedio
+        # 'score_error2': int(score_error2), # margen de error
+        'suggest_sale_price': int(suggest_sale_price), # precio sugerido de venta
+        "suggest_sale_price_img": suggessalepriceURL, # gráfico de precio sugerido de venta
+        "avg_sale_price": precio_venta_list.describe()['Unitario Venta']['mean'], # precio de venta promedio
+        "max_sale_price": precio_venta_list.describe()['Unitario Venta']['max'] # precio de venta máximo 
     }
 
 
 def get_buy_stats(dataset):
+    # Filtra las columnas necesarias
     precio_compra_list = dataset.groupby(
         dataset['Unitario Costo'],
         as_index=False).aggregate({
@@ -232,6 +234,7 @@ def get_buy_stats(dataset):
     avg_buy_margen = precio_compra_list['Margen Porcentaje'].describe()['mean']
     print('buy stats getted')
 
+    #SECTION - Precio sugerido de venta mediante regresión lineal
     X = precio_compra_list[['Margen Porcentaje']]
     Y = precio_compra_list['Unitario Costo']
 
@@ -240,51 +243,59 @@ def get_buy_stats(dataset):
     X = sc_X.fit_transform(X.values)
     X = sc_X.transform(X)
 
-    # Entrenación
+    # Entrenamiento de datos
     reg = LinearRegression().fit(X, Y)
     error_score2 = reg.score(X, Y)
     print('buy stats trained')
 
+    # Predicción
     predict = reg.predict(X)
     suggest_buy_price = reg.predict([[avg_buy_margen]])
     suggest_buy_price = suggest_buy_price[0]
     print('buy stats predicted')
 
+    # Gráfico de la regression lineal
     plt.figure()
     plt.plot(predict, 'ro', suggest_buy_price, 'bo')
     suggestbutpriceURL = upload_img(product_path, 'suggest_buy_price.jpg', plt)
     print('but stats chart created')
+    #!SECTION
 
     return {
-        # "error_score2":error_score2,
-        "suggest_buy_price": int(suggest_buy_price),
-        "suggest_buy_price_URL": suggestbutpriceURL,
-        'avg_buy_price': precio_compra_list.describe()['Unitario Venta']['mean'],
-        "max_buy_price": precio_compra_list.describe()['Unitario Venta']['min']
+        # "error_score2":error_score2, # margen de error
+        "suggest_buy_price": int(suggest_buy_price), # precio sugerido de venta mediante regresión lineal
+        "suggest_buy_price_URL": suggestbutpriceURL,  # gráfico del precio sugerido de venta mediante regresión
+        'avg_buy_price': precio_compra_list.describe()['Unitario Venta']['mean'], # precio promedia de compra
+        "max_buy_price": precio_compra_list.describe()['Unitario Venta']['min'] # precio menor de compra
     }
 
 
 def get_sales_timeline(dataset):
 
+    # Get required columns
     sales_timeline = dataset.groupby(dataset['Fecha'], as_index=True).aggregate({
         'Unidades': 'sum',
         'Ventas': 'sum',
         'Costos': 'sum',
     })
 
+    """ First row of sales timeline"""
     first = sales_timeline.iloc[0].name
+    """ Last row of sales timeline"""
     last = sales_timeline.iloc[-1].name
 
-    # STORAGE FILE
+    # Tranform the timeline data and storages in a CSV file
     timeline_df = sales_timeline.to_csv()
     timelineURL = upload_file(product_path, 'sales-timeline.csv', timeline_df)
     print('timeline json created')
 
+    # SECTION - Get stats for each month
     timestats = get_timestats(dataset)
 
     unitsbymonth = get_salesvscosts(sales_timeline)
 
     monthsbox = get_boxmonths(sales_timeline)
+    #!SECTION
 
     # BUILD RESULT
     result = {
@@ -307,19 +318,21 @@ def get_sales_timeline(dataset):
 
 
 def get_salesvscosts(dataset):
-    # GROUP DATA BY SALES IN DATE
+    # Group data by sales in date
     df_dates = dataset.groupby(
         dataset.index,
         as_index=True).aggregate({
             'Unidades': 'sum'
         })
 
+    # Agrupa las ventas por semanas
     df_periods = dataset.groupby(pd.Grouper(freq='W')).aggregate({
         # 'Unidades': 'sum',
         'Ventas': 'sum',
         'Costos': 'sum',
     })
 
+    # Crea el gráfico de ventas vs costos
     plt.figure()
     df_periods.plot(figsize=(14, 6),  title='Ventas vs Costos', )
     # df_periods['Costos'].plot(figsize = (14,6), lw=2, label="Costos")
@@ -341,9 +354,11 @@ def get_salesvscosts(dataset):
 
 def get_boxmonths(dataset):
 
+    # Group data by month
     product_dataset = dataset['Unidades']
     months = product_dataset.groupby(pd.Grouper(freq='M'))
     print('months sales grouped')
+
 
     indexes = []
     datas = []
@@ -376,6 +391,7 @@ def get_boxmonths(dataset):
         normalized_df[mes] = pd.Series(values)
 
     print('normalized dataframe created')
+    
     # MAKE CHARTS IMAGES
     plt.figure()
     months_box = normalized_df.replace(0, np.nan)
@@ -393,7 +409,7 @@ def get_boxmonths(dataset):
 
 
 def get_timestats(dataset):
-    # MONTHS SALES
+    # Agupa los datos por mes
     ps_dates = dataset.set_index('Fecha')
     meses_list = ps_dates.groupby(pd.Grouper(freq="M")).aggregate({
         'Unidades': 'sum',
@@ -406,7 +422,7 @@ def get_timestats(dataset):
     }).dropna()
     print('months list grouped')
 
-    # GET MAX SALES MONTH
+    # Obtiene lo meses con más ventas
     max_sales = meses_list['Unidades'].describe()['max']
     max_sales_month = meses_list[meses_list['Unidades'] == max_sales]
     sales_months = []
@@ -415,7 +431,7 @@ def get_timestats(dataset):
         sales_months.append(str_month)
     print('max sale months getted')
 
-    # GET MAX THROWPUT MONTH
+    # Obtiene el mes con mayor rendimiento
     max_throwput_month = meses_list['Margen Porcentaje'].describe()['max']
     max_margen_month = meses_list[meses_list['Margen Porcentaje']
                                   == max_throwput_month]
